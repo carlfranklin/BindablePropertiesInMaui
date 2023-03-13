@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 x:Class="BindablePropertiesInMaui.PersonComponent">
+
+    <StackLayout MaximumWidthRequest="400">
+        <Label Text="Person"
+			   FontSize="Medium"
+			   Margin="0,24,0,0" />
+        <Entry Text="{Binding Person.FirstName, Mode=TwoWay}"
+			   Placeholder="First Name"
+			   Margin="0,24,0,0" />
+        <Entry Text="{Binding Person.LastName, Mode=TwoWay}"
+			   Placeholder="Last Name"
+			   Margin="0,24,0,0" />
+        <DatePicker Date="{Binding Person.DateOfBirth, Mode=TwoWay}"
+					Margin="0,24,0,0" />
+    </StackLayout>
+</ContentView>
