@@ -2,6 +2,8 @@
 
 Bindable properties are an essential part of developing a robust user interface in MAUI. They allow you to create properties that can be bound to UI elements, enabling you to respond to user input and update the UI in real-time. With bindable properties, you can also perform validation on user input and display errors in the UI.
 
+> :point_up: **Note**: This demo applies only to MAUI XAML projects. MAUI Blazor doesn't require property change notifications. Instead, it uses it's own binding system which relies on calling `StateHasChanged()` to re-render a component.
+
 ## Introduction
 
 In this tutorial, we'll cover the creation and effective usage of bindable properties in your MAUI app. We'll start by tracing the evolution from `INotifyPropertyChanged` to `ObservableObject`, ultimately leading to `BindableProperty`.
@@ -470,9 +472,9 @@ Additionally, it may not always be desirable or practical to modify the inherita
 
 So, how can we implement the ideal solution?
 
-Bind to a person object, rather than implement bindable properties on the model.
+The answer is to remove any base class dependencies from our model, and instead create a ViewModel object that implements BindableProperties on the UI side, and accesses your clean model objects in any way you see fit.
 
-### Binding to an Object
+### Binding to a ViewModel
 
 To begin, let's clean up our *Person.cs* model by removing the `BindableObject` base class, resulting in a plain old CLR object (POCO). Replace the contents of *Person.cs* with the following code:
 
@@ -522,7 +524,7 @@ public class Person
 }
 ```
 
-Create a new class called *PersonEditor.cs* and add the following code inside:
+Create a new class called *PersonEditor.cs* (our ViewModel) and add the following code inside:
 
 *PersonEditor.cs*:
 
