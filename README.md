@@ -56,7 +56,7 @@ We will show how to use `ObservableObject` to reduce the boilerplate code of usi
 
 Then, we will move on to the new way of doing this, which is creating a bindable property using `BindableProperty.Create` and binding it to our UI.
 
-Finally, we will look at how binding to an object, rather than implement bindable properties on a model, is the ideal solution for data-binding in MAUI.
+Finally, we will look at how using a ViewModel, rather than implementing bindable properties on a model, is the ideal solution for data-binding in MAUI.
 
 ### Create a .NET MAUI Application
 
@@ -76,7 +76,7 @@ In the "Additional information" window, choose the app's target Framework and cl
 
 ![Additional information](images/2c0044351683c136074708773b5ed14f70a81ab26d0c6a65d0f177d006f7e6ec.png)  
 
-Great, now let's run the app to ensure everything is working as expected.
+Now, let's run the app to ensure everything is working as expected.
 
 In this case, I will be demonstrating the app on a Windows Machine, but you can run it on your preferred emulator or simulator and expect similar results.
 
@@ -144,19 +144,22 @@ public class Person : INotifyPropertyChanged
 
     protected virtual void OnPropertyChanged(string propertyName)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        PropertyChanged?.Invoke(this, 
+          new PropertyChangedEventArgs(propertyName));
     }
 }
 ```
 
 #### Create a PersonComponent
 
-Now let's create a new `PersonComponent` XAML file using the `ContentView` object to represent the UI for the person's information. This component will display the person's information in their respective controls (e.g. Entry for FirstName, Entry for LastName, and DatePicker for DateOfBirth). 
+Now let's create a new `PersonComponent` XAML file using a `ContentView` object to represent the UI for the person's information. This component will display the person's information in their respective controls (e.g. Entry for FirstName, Entry for LastName, and DatePicker for DateOfBirth) and allow us to edit.
 
 This component will be used to display the person's information on the main page of the app.
 
 Right-click on the `BindablePropertiesInMaui` project and select Add -> New Item.
-Select the ".NET MAUI" option on the left-hand side and then select ".NET MAUI ContentView (XAML)" on the right-hand side.v
+
+Select the ".NET MAUI" option on the left-hand side and then select ".NET MAUI ContentView (XAML)" on the right-hand side. 
+
 Name the file *PersonComponent.xaml* and click the "Add" button.
 
 ![.NET MAUI ContentView (XAML)](images/54e70f37561cfe621f8e4de1552f88377f403e7cbd6e93260ab902134316a0a4.png)  
@@ -196,7 +199,8 @@ namespace BindablePropertiesInMaui;
 
 public partial class PersonComponent : ContentView
 {
-	private Person _person = new("Carl", "Franklin", DateTime.Now );
+	private Person _person 
+        = new("Carl", "Franklin", DateTime.Now );
 
 	public PersonComponent()
 	{
@@ -204,12 +208,17 @@ public partial class PersonComponent : ContentView
 		BindingContext = _person;
 	}
 
-	private void DatePicker_DateSelected(object sender, DateChangedEventArgs e)
+	private void DatePicker_DateSelected(object sender, 
+        DateChangedEventArgs e)
 	{
 		_person.DateOfBirth = e.NewDate;
 	}
 }
 ```
+
+Note that we're setting the BindingContext to a local `Person` object. 
+
+We are also handling the `DatePicker.DateSelected` event, where we update the `Person`'s `DateOfBirth` property.
 
 Open the *MainPage.xaml* file and replace the default code with the following XAML code:
 
@@ -224,6 +233,8 @@ Open the *MainPage.xaml* file and replace the default code with the following XA
 	<local:PersonComponent/>
 </ContentPage>
 ```
+
+We have added the `local` XAML namespace, and defined a `PersonComponent` on the page.
 
 Open the *MainPage.xaml.cs* file and replace the default code with the following C# code:
 
@@ -324,7 +335,9 @@ public class Person : ObservableObject
 }
 ```
 
-In this example, the `SetProperty` method is used to set the property value and fire the `PropertyChanged` event automatically. By using the `ObservableObject` class, developers can reduce the amount of boilerplate code in their projects and make their code more maintainable and error-free.
+In this example, our `Person` class inherits `ObservableObject`, which implements `INotifyPropertyChanged`.
+
+the `SetProperty` method is used to set the property value and fire the `PropertyChanged` event automatically. By using the `ObservableObject` class, developers can reduce the amount of boilerplate code in their projects and make their code more maintainable and error-free.
 
 After running the application, it can be observed that the data binding functionality still works bidirectionally. Furthermore, it can be noted that the amount of repetitive code has been significantly reduced, providing a more concise and maintainable codebase.
 
@@ -336,11 +349,9 @@ Observe that modifying any of the fields in the user interface still will update
 
 To learn more about `ObservableObject`, visit the official Microsoft documentation at [ObservableObject](https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/observableobject).
 
-### Creating Bindable Properties
+### BindableObject and BindableProperty
 
-Having explored the previous approaches that led to the current solution using bindable properties, let's now shift our focus to creating bindable properties since we now understand how to implement `INotifyPropertyChanged`.
-
-In this section, we will convert the code from using the old `INotifyPropertyChanged` to the new `BindableProperty`.
+Having explored the previous approaches that led to the current solution using bindable properties, let's now shift our focus to creating bindable properties since we now understand how to implement `INotifyPropertyChanged` and how to use the `ObservableObject` as a base class.
 
 Open *Person.cs* file.
 
@@ -458,21 +469,19 @@ Also notice that any UI changes also bind to the code behind.
 
 ![DateOfBirth Updated](images/0e3ae8a4fef4344a36344de34a25f30191c079890090ab6887fe95c5205a72aa.png)  
 
+#### Why should you use BindableObject and BindableProperty?
+
 Wondering which approach to use for data binding in your MAUI application, `INotifyPropertyChanged`, `ObservableObject`, or `BindableProperty`? Let's explore the reasons to choose one over the other.
 
-`INotifyPropertyChanged`, `ObservableObject` and `BindableProperty` provide a mechanism for two-way data binding between UI elements and code-behind. However, `BindableProperty` is specifically designed for use with the latest .NET MAUI framework and provides some benefits over `INotifyPropertyChanged` and `ObservableObject`, such as better performance, type safety, and compatibility with Xamarin.Forms and .NET MAUI platforms.
+`INotifyPropertyChanged`, `ObservableObject` and `BindableProperty` all provide a mechanism for two-way data binding between UI elements and code-behind. However, `BindableProperty` is specifically designed for use with the latest .NET MAUI framework and provides some benefits over `INotifyPropertyChanged` and `ObservableObject`, such as better performance, type safety, and compatibility with Xamarin.Forms and .NET MAUI platforms.
 
 Additionally, `BindableProperty` allows for better control over binding modes and default values, making it a more robust and convenient solution for modern app development.
 
-On the other hand, even though bindable properties are less intrusive than using `ObservableObject` because bindable properties are defined within the class itself, while `ObservableObject` requires your models to inherit from a base class. This can be seen as a disadvantage because it limits the inheritance hierarchy of your classes.
-
-In other words, if you want to use a base class other than `ObservableObject`, you would need to create a separate version of your model class, leading to code duplication and reduced maintainability.
-
-Additionally, it may not always be desirable or practical to modify the inheritance hierarchy of your model classes to implement data binding.
+Both `ObservableObject` and `BindableObject` are required as base classes if you want to implement property change notification. It may not always be desirable or practical to modify the inheritance hierarchy of your model classes to implement data binding.
 
 So, how can we implement the ideal solution?
 
-The answer is to remove any base class dependencies from our model, and instead create a ViewModel object that implements BindableProperties on the UI side, and accesses your clean model objects in any way you see fit.
+The answer is to remove any base class dependencies from our model, and instead create a ViewModel object that inherits from `BindableObject`  and implements `BindableProperties` on the UI side, and accesses your clean model objects in any way you see fit.
 
 ### Binding to a ViewModel
 
@@ -524,6 +533,8 @@ public class Person
 }
 ```
 
+I left the setters in there so you can test them with breakpoints.
+
 Create a new class called *PersonEditor.cs* (our ViewModel) and add the following code inside:
 
 *PersonEditor.cs*:
@@ -557,7 +568,7 @@ By separating the view model (`PersonEditor`) from the model (`Person`), we keep
 
 This is a good practice in software development, as it makes our code easier to maintain and modify in the future.
 
-Then modify the *PersonComponent.xaml* file as shown below:
+Modify the *PersonComponent.xaml* file as shown below:
 
 ```xaml
 <?xml version="1.0" encoding="utf-8" ?>
@@ -580,6 +591,8 @@ Then modify the *PersonComponent.xaml* file as shown below:
 	</StackLayout>
 </ContentView>
 ```
+
+The only difference is the binding syntax. We now specify `Binding Person.FirstName` rather than `Binding FirstName`, etc.
 
 Lastly, update the *PersonComponent.xaml.cs* file with the code below:
 
@@ -611,7 +624,7 @@ After making these changes, run the application once again and observe that the 
 
 ![Properties bound to the UI](images/a8f80aa800fec006991f68696ab8a65bd477944eba18ea825c3e98a2a3c878c3.png)  
 
-Our model still gets updated despite not extending the `ObservableObject` class, as we have effectively implemented data binding through the use of bindable properties on an object.
+Our model still gets updated despite not extending the `ObservableObject` class, as we have effectively implemented data binding through the use of bindable properties on the ViewModel, and our model stays pure.
 
 ![ObservableObject on an Object](images/2ec1faad345ec9160b2697ca7b3e39b2237f50256beb42cddbb68a56920a31ac.png)  
 
@@ -623,7 +636,7 @@ We showed how to use `ObservableObject` to reduce the boilerplate code of using 
 
 Then, we created a bindable property using `BindableProperty.Create` and saw how to bind to it in our UI.
 
-Finally, we looked at how binding to an object, rather than implement bindable properties on a model, is the ideal solution for data-binding in MAUI.
+Finally, we looked at how binding to a ViewModel, rather than implementing bindable properties on a model, is the ideal solution for data-binding in MAUI.
 
 For more detailed information on how to develop .NET MAUI applications, check out the links to documentation and tutorials in the resources section below.
 
