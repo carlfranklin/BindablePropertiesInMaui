@@ -7,13 +7,13 @@
         <Label Text="Person"
 			   FontSize="Medium"
 			   Margin="0,24,0,0" />
-        <Entry Text="{Binding Person.FirstName, Mode=TwoWay}"
+        <Entry Text="{Binding Person.FirstName}"
 			   Placeholder="First Name"
 			   Margin="0,24,0,0" />
-        <Entry Text="{Binding Person.LastName, Mode=TwoWay}"
+        <Entry Text="{Binding Person.LastName}"
 			   Placeholder="Last Name"
 			   Margin="0,24,0,0" />
-        <DatePicker Date="{Binding Person.DateOfBirth, Mode=TwoWay}"
+        <DatePicker Date="{Binding Person.DateOfBirth}"
 					Margin="0,24,0,0" />
     </StackLayout>
 </ContentView>

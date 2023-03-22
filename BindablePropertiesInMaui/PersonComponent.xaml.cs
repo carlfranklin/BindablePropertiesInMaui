@@ -2,20 +2,31 @@
 
 public partial class PersonComponent : ContentView
 {
-    private PersonEditor personEditor;
-
-    // This person obhect would typically come from a db or another store
-    readonly Person person = new("Carl", "Franklin", DateTime.Now);
-
     public PersonComponent()
     {
         InitializeComponent();
-        personEditor = new PersonEditor(person);
-        BindingContext = personEditor;
+        BindingContext = this;
+    }
+
+    public static readonly BindableProperty PersonProperty = BindableProperty.Create(
+        nameof(Person),
+        typeof(Person),
+        typeof(PersonComponent),
+        default(Person));
+
+    public Person Person
+    {
+        get { return (Person)GetValue(PersonProperty); }
+        set { SetValue(PersonProperty, value); }
+    }
+
+    public void Refresh()
+    {
+        OnPropertyChanged(nameof(Person));
     }
 
     private void DatePicker_DateSelected(object sender, DateChangedEventArgs e)
     {
-        personEditor.Person.DateOfBirth = e.NewDate;
+        Person.DateOfBirth = e.NewDate;
     }
 }

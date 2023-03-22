@@ -3,5 +3,10 @@
 			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 			 x:Class="BindablePropertiesInMaui.MainPage"
 			 xmlns:local="clr-namespace:BindablePropertiesInMaui">
-    <local:PersonComponent/>
+    
+    <StackLayout>
+        <local:PersonComponent x:Name="MyPersonComponent"/>
+        <Button Clicked="Button_Clicked" Text="Click Me" />
+    </StackLayout>
+    
 </ContentPage>

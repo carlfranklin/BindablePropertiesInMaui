@@ -56,7 +56,7 @@ We will show how to use `ObservableObject` to reduce the boilerplate code of usi
 
 Then, we will move on to the new way of doing this, which is creating a bindable property using `BindableProperty.Create` and binding it to our UI.
 
-Finally, we will look at how using a ViewModel, rather than implementing bindable properties on a model, is the ideal solution for data-binding in MAUI.
+Finally, we will look at how implementing a `BindableProperty` in the component, rather than implementing in a model, is the ideal solution for creating component properties.
 
 ### Create a .NET MAUI Application
 
@@ -481,9 +481,11 @@ Both `ObservableObject` and `BindableObject` are required as base classes if you
 
 So, how can we implement the ideal solution?
 
-The answer is to remove any base class dependencies from our model, and instead create a ViewModel object that inherits from `BindableObject`  and implements `BindableProperties` on the UI side, and accesses your clean model objects in any way you see fit.
+The answer is to remove any base class dependencies from our model, and instead implement the`BindableProperty` directly in our component.
 
-### Binding to a ViewModel
+### Using BindableProperty in a Component
+
+We're going to make `Person` a `BindableProperty` of our component. The actual data can be set from the component host, in this case *MainPage.Xaml.cs*. 
 
 To begin, let's clean up our *Person.cs* model by removing the `BindableObject` base class, resulting in a plain old CLR object (POCO). Replace the contents of *Person.cs* with the following code:
 
@@ -535,39 +537,6 @@ public class Person
 
 I left the setters in there so you can test them with breakpoints.
 
-Create a new class called *PersonEditor.cs* (our ViewModel) and add the following code inside:
-
-*PersonEditor.cs*:
-
-```csharp
-namespace BindablePropertiesInMaui;
-
-public class PersonEditor : BindableObject
-{
-    public static readonly BindableProperty PersonProperty = BindableProperty.Create(
-        nameof(Person),
-        typeof(Person),
-        typeof(PersonEditor));
-
-    public PersonEditor(Person person)
-    {
-        Person = person;
-    }
-
-    public Person Person
-    {
-        get { return (Person)GetValue(PersonProperty); }
-        set { SetValue(PersonProperty, value); }
-    }
-}
-```
-
-Note that the `PersonEditor` class extends the `BindableObject` class, unlike the `Person` class. This is because we want to use the properties as bindable properties, and we need to inherit from `BindableObject` in order to do so.
-
-By separating the view model (`PersonEditor`) from the model (`Person`), we keep the concerns of our classes separate and maintain a clear separation of concerns in our code.
-
-This is a good practice in software development, as it makes our code easier to maintain and modify in the future.
-
 Modify the *PersonComponent.xaml* file as shown below:
 
 ```xaml
@@ -580,13 +549,13 @@ Modify the *PersonComponent.xaml* file as shown below:
 		<Label Text="Person"
 			   FontSize="Medium"
 			   Margin="0,24,0,0" />
-		<Entry Text="{Binding Person.FirstName, Mode=TwoWay}"
+		<Entry Text="{Binding Person.FirstName}"
 			   Placeholder="First Name"
 			   Margin="0,24,0,0" />
-		<Entry Text="{Binding Person.LastName, Mode=TwoWay}"
+		<Entry Text="{Binding Person.LastName}"
 			   Placeholder="Last Name"
 			   Margin="0,24,0,0" />
-		<DatePicker Date="{Binding Person.DateOfBirth, Mode=TwoWay}"
+		<DatePicker Date="{Binding Person.DateOfBirth}"
 					Margin="0,24,0,0" />
 	</StackLayout>
 </ContentView>
@@ -594,37 +563,76 @@ Modify the *PersonComponent.xaml* file as shown below:
 
 The only difference is the binding syntax. We now specify `Binding Person.FirstName` rather than `Binding FirstName`, etc.
 
-Lastly, update the *PersonComponent.xaml.cs* file with the code below:
+Update the *PersonComponent.xaml.cs* file with the code below:
 
 ```csharp
 namespace BindablePropertiesInMaui;
 
 public partial class PersonComponent : ContentView
 {
-    private PersonEditor personEditor;
-
-    // This person obhect would typically come from a db or another store
-    readonly Person person = new("Carl", "Franklin", DateTime.Now);
-
     public PersonComponent()
     {
         InitializeComponent();
-        personEditor = new PersonEditor(person);
-        BindingContext = personEditor;
+        BindingContext = this;
+    }
+
+    public static readonly BindableProperty PersonProperty = BindableProperty.Create(
+        nameof(Person),
+        typeof(Person),
+        typeof(PersonComponent));
+
+    public Person Person
+    {
+        get { return (Person)GetValue(PersonProperty); }
+        set { SetValue(PersonProperty, value); }
     }
 
     private void DatePicker_DateSelected(object sender, DateChangedEventArgs e)
     {
-        personEditor.Person.DateOfBirth = e.NewDate;
+        Person.DateOfBirth = e.NewDate;
     }
 }
 ```
+
+The only thing left to do is to initialize the Person data in `MainPage`. 
+
+Change *MainPage.xaml* to the following:
+
+```xaml
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 x:Class="BindablePropertiesInMaui.MainPage"
+			 xmlns:local="clr-namespace:BindablePropertiesInMaui">
+    <local:PersonComponent x:Name="MyPersonComponent"/>
+</ContentPage>
+```
+
+All we did here is give the `PersonCompoent` the name `MyPersonComponent` so we can access the `Person` property from the code behind.
+
+Change *MainPage.xaml.cs* to the following:
+
+```c#
+namespace BindablePropertiesInMaui;
+
+public partial class MainPage : ContentPage
+{
+    public MainPage()
+    {
+        InitializeComponent();
+
+        MyPersonComponent.Person = new Person("Carl", "Franklin", DateTime.Now);
+    }
+}
+```
+
+Here we are simply setting the `Person` property.
 
 After making these changes, run the application once again and observe that the fields are still properly bound to the UI:
 
 ![Properties bound to the UI](images/a8f80aa800fec006991f68696ab8a65bd477944eba18ea825c3e98a2a3c878c3.png)  
 
-Our model still gets updated despite not extending the `ObservableObject` class, as we have effectively implemented data binding through the use of bindable properties on the ViewModel, and our model stays pure.
+Our model still gets updated despite not extending the `ObservableObject` class, as we have effectively implemented data binding through the use of a `BindableProperty` on the `PersonComponent`, and our model stays pure.
 
 ![ObservableObject on an Object](images/2ec1faad345ec9160b2697ca7b3e39b2237f50256beb42cddbb68a56920a31ac.png)  
 
@@ -636,7 +644,7 @@ We showed how to use `ObservableObject` to reduce the boilerplate code of using 
 
 Then, we created a bindable property using `BindableProperty.Create` and saw how to bind to it in our UI.
 
-Finally, we looked at how binding to a ViewModel, rather than implementing bindable properties on a model, is the ideal solution for data-binding in MAUI.
+Finally, we looked at how using a `BindableProperty` on the compoent, rather than implementing in our model, is the ideal solution for component properties, taking the burden of property change notification out of the model.
 
 For more detailed information on how to develop .NET MAUI applications, check out the links to documentation and tutorials in the resources section below.
 
